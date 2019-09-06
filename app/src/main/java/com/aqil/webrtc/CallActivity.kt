@@ -38,7 +38,7 @@ class CallActivity : AppCompatActivity(), AppRTCClient.SignalingEvents, PeerConn
     private var roomConnectionParameters: AppRTCClient.RoomConnectionParameters? = null
     private var peerConnectionParameters: PeerConnectionClient.PeerConnectionParameters? = null
 
-    private var iceConnected: Boolean = false
+    private var isIceConnected: Boolean = false
     private var isError: Boolean = false
     private var callStartedTimeMs: Long = 0
     private var micEnabled = true
@@ -112,7 +112,7 @@ class CallActivity : AppCompatActivity(), AppRTCClient.SignalingEvents, PeerConn
         updateVideoView(remote_video_layout,
             local_video_layout,
             remote_video_view,
-            local_video_view,iceConnected)
+            local_video_view,isIceConnected)
     }
 
 
@@ -309,7 +309,7 @@ class CallActivity : AppCompatActivity(), AppRTCClient.SignalingEvents, PeerConn
             audioManager!!.stop()
             audioManager = null
         }
-        if (iceConnected && !isError) {
+        if (isIceConnected && !isError) {
             setResult(RESULT_OK)
         } else {
             setResult(RESULT_CANCELED)
@@ -384,7 +384,7 @@ class CallActivity : AppCompatActivity(), AppRTCClient.SignalingEvents, PeerConn
         val delta = System.currentTimeMillis() - callStartedTimeMs
         runOnUiThread {
             logAndToast("ICE connected, delay=" + delta + "ms")
-            iceConnected = true
+            isIceConnected = true
             callConnected()
         }
     }
@@ -392,7 +392,7 @@ class CallActivity : AppCompatActivity(), AppRTCClient.SignalingEvents, PeerConn
     override fun onIceDisconnected() {
         runOnUiThread {
             logAndToast("onIceDisconnected")
-            iceConnected = false
+            isIceConnected = false
             disconnect()
         }
     }
