@@ -1,2 +1,2 @@
-include ':app'
+include ':app', ':webrtc'
 rootProject.name='WebRtcAudioVideoCalling'

@@ -6,42 +6,33 @@ import android.view.View
 import android.view.WindowManager.LayoutParams.*
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.aqil.webrtc.interfeces.AppRTCClient
-import com.aqil.webrtc.interfeces.OnCallEvents
-import com.aqil.webrtc.interfeces.PeerConnectionEvents
-import com.aqil.webrtc.utils.Constants.EXTRA_ROOMID
-import com.aqil.webrtc.utils.Constants.IS_VIDEO
-import com.aqil.webrtc.utils.Constants.LOCAL_HEIGHT_CONNECTED
-import com.aqil.webrtc.utils.Constants.LOCAL_HEIGHT_CONNECTING
-import com.aqil.webrtc.utils.Constants.LOCAL_WIDTH_CONNECTED
-import com.aqil.webrtc.utils.Constants.LOCAL_WIDTH_CONNECTING
-import com.aqil.webrtc.utils.Constants.LOCAL_X_CONNECTED
-import com.aqil.webrtc.utils.Constants.LOCAL_X_CONNECTING
-import com.aqil.webrtc.utils.Constants.LOCAL_Y_CONNECTED
-import com.aqil.webrtc.utils.Constants.LOCAL_Y_CONNECTING
-import com.aqil.webrtc.utils.Constants.REMOTE_HEIGHT
-import com.aqil.webrtc.utils.Constants.REMOTE_WIDTH
-import com.aqil.webrtc.utils.Constants.REMOTE_X
-import com.aqil.webrtc.utils.Constants.REMOTE_Y
-import com.aqil.webrtc.utils.Constants.STAT_CALLBACK_PERIOD
-import com.aqil.webrtc.web_rtc.AppRTCAudioManager
-import com.aqil.webrtc.web_rtc.PeerConnectionClient
-import com.aqil.webrtc.web_rtc.WebSocketRTCClient
+import com.aqil.interfeces.AppRTCClient
+import com.aqil.interfeces.OnCallEvents
+import com.aqil.interfeces.PeerConnectionEvents
+import com.aqil.utils.Constants
+import com.aqil.utils.Constants.EXTRA_ROOMID
+import com.aqil.utils.Constants.IS_VIDEO
+import com.aqil.utils.Constants.STAT_CALLBACK_PERIOD
+import com.aqil.utils.GetClasses
+import com.aqil.utils.GetClasses.Companion.createVideoCapturer
+import com.aqil.web_rtc.AppRTCAudioManager
+import com.aqil.web_rtc.PeerConnectionClient
+import com.aqil.web_rtc.WebSocketRTCClient
+import com.aqil.webrtc.view.PercentFrameLayout
 import kotlinx.android.synthetic.main.activity_call.*
 import org.webrtc.*
-import java.util.*
 
 class CallActivity : AppCompatActivity(), AppRTCClient.SignalingEvents, PeerConnectionEvents,
     OnCallEvents {
 
     private val LOG_TAG = "CallActivityLog"
 
-    private var peerConnectionClient:PeerConnectionClient? = PeerConnectionClient()
+    private var peerConnectionClient: PeerConnectionClient? = PeerConnectionClient()
     private var appRtcClient: AppRTCClient? = null
     private var signalingParameters: AppRTCClient.SignalingParameters? = null
     private var audioManager: AppRTCAudioManager? = null
-    private var rootEglBase: EglBase? = EglBase.create()
-    private val remoteRenderer = ArrayList<VideoRenderer.Callbacks>()
+    private var rootEglBase = GetClasses.getEagleClass()
+    private val remoteRenderer = GetClasses.getVideoRendereList()
     private var activityRunning: Boolean = false
 
     private var roomConnectionParameters: AppRTCClient.RoomConnectionParameters? = null
@@ -65,8 +56,7 @@ class CallActivity : AppCompatActivity(), AppRTCClient.SignalingEvents, PeerConn
 
         init()
 
-        updateVideoView()
-
+        uploadVideo()
 
 
         getExtraIntent()
@@ -79,35 +69,35 @@ class CallActivity : AppCompatActivity(), AppRTCClient.SignalingEvents, PeerConn
 
     }
 
+    fun updateVideoView(remote_video_layout: PercentFrameLayout,
+                        local_video_layout:PercentFrameLayout,
+                        remote_video_view: SurfaceViewRenderer,
+                        local_video_view: SurfaceViewRenderer,
+                        iceConnected:Boolean) {
 
-    private fun init(){
-        remoteRenderer.add(remote_video_view)
-
-        // Create video renderers.
-        rootEglBase = EglBase.create()
-        local_video_view.init(rootEglBase!!.eglBaseContext, null)
-        remote_video_view.init(rootEglBase!!.eglBaseContext, null)
-
-        local_video_view.setZOrderMediaOverlay(true)
-        local_video_view.setEnableHardwareScaler(true)
-        remote_video_view.setEnableHardwareScaler(true)
-
-
-    }
-
-    private fun updateVideoView() {
-        remote_video_layout.setPosition(REMOTE_X, REMOTE_Y, REMOTE_WIDTH, REMOTE_HEIGHT)
+        remote_video_layout.setPosition(
+            Constants.REMOTE_X,
+            Constants.REMOTE_Y,
+            Constants.REMOTE_WIDTH,
+            Constants.REMOTE_HEIGHT
+        )
         remote_video_view.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL)
         remote_video_view.setMirror(false)
 
         if (iceConnected) {
             local_video_layout.setPosition(
-                LOCAL_X_CONNECTED, LOCAL_Y_CONNECTED, LOCAL_WIDTH_CONNECTED, LOCAL_HEIGHT_CONNECTED
+                Constants.LOCAL_X_CONNECTED,
+                Constants.LOCAL_Y_CONNECTED,
+                Constants.LOCAL_WIDTH_CONNECTED,
+                Constants.LOCAL_HEIGHT_CONNECTED
             )
             local_video_view.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
         } else {
             local_video_layout.setPosition(
-                LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING, LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING
+                Constants.LOCAL_X_CONNECTING,
+                Constants.LOCAL_Y_CONNECTING,
+                Constants.LOCAL_WIDTH_CONNECTING,
+                Constants.LOCAL_HEIGHT_CONNECTING
             )
             local_video_view.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL)
         }
@@ -117,6 +107,29 @@ class CallActivity : AppCompatActivity(), AppRTCClient.SignalingEvents, PeerConn
         local_video_view.requestLayout()
         remote_video_view.requestLayout()
     }
+
+    fun uploadVideo(){
+        updateVideoView(remote_video_layout,
+            local_video_layout,
+            remote_video_view,
+            local_video_view,iceConnected)
+    }
+
+
+    private fun init(){
+        remoteRenderer.add(remote_video_view)
+
+        // Create video renderers.
+        local_video_view.init(rootEglBase.eglBaseContext, null)
+        remote_video_view.init(rootEglBase.eglBaseContext, null)
+
+        local_video_view.setZOrderMediaOverlay(true)
+        local_video_view.setEnableHardwareScaler(true)
+        remote_video_view.setEnableHardwareScaler(true)
+
+
+    }
+
 
     private fun getExtraIntent(){
         val intent = intent
@@ -187,46 +200,10 @@ class CallActivity : AppCompatActivity(), AppRTCClient.SignalingEvents, PeerConn
         audioManager?.setSpeakerphoneOn(isSpeakerOn)
     }
 
-    private fun useCamera2(): Boolean {
-        return Camera2Enumerator.isSupported(this)
-    }
 
 
-    private fun captureToTexture(): Boolean {
-        return true
-    }
 
-    private fun createCameraCapturer(enumerator: CameraEnumerator): VideoCapturer? {
-        val deviceNames = enumerator.deviceNames
 
-        // First, try to find front facing camera
-        Logging.d(LOG_TAG, "Looking for front facing cameras.")
-        for (deviceName in deviceNames) {
-            if (enumerator.isFrontFacing(deviceName)) {
-                Logging.d(LOG_TAG, "Creating front facing camera capturer.")
-                val videoCapturer = enumerator.createCapturer(deviceName, null)
-
-                if (videoCapturer != null) {
-                    return videoCapturer
-                }
-            }
-        }
-
-        // Front facing camera not found, try something else
-        Logging.d(LOG_TAG, "Looking for other cameras.")
-        for (deviceName in deviceNames) {
-            if (!enumerator.isFrontFacing(deviceName)) {
-                Logging.d(LOG_TAG, "Creating other camera capturer.")
-                val videoCapturer = enumerator.createCapturer(deviceName, null)
-
-                if (videoCapturer != null) {
-                    return videoCapturer
-                }
-            }
-        }
-
-        return null
-    }
 
     // Activity interfaces
     override fun onPause() {
@@ -263,7 +240,7 @@ class CallActivity : AppCompatActivity(), AppRTCClient.SignalingEvents, PeerConn
             return
         }
         // Update video view.
-        updateVideoView()
+        uploadVideo()
         // Enable statistics callback.
         peerConnectionClient?.enableStatsEvents(true, STAT_CALLBACK_PERIOD)
     }
@@ -280,21 +257,7 @@ class CallActivity : AppCompatActivity(), AppRTCClient.SignalingEvents, PeerConn
         // TODO(henrika): add callback handler.
     }
 
-    private fun createVideoCapturer(): VideoCapturer? {
-        val videoCapturer: VideoCapturer?
-        if (useCamera2()) {
-            Logging.d(LOG_TAG, "Creating capturer using camera2 API.")
-            videoCapturer = createCameraCapturer(Camera2Enumerator(this))
-        } else {
-            Logging.d(LOG_TAG, "Creating capturer using camera1 API.")
-            videoCapturer = createCameraCapturer(Camera1Enumerator(captureToTexture()))
-        }
-        if (videoCapturer == null) {
-            Log.v(LOG_TAG,"Failed to open camera")
-            return null
-        }
-        return videoCapturer
-    }
+
 
     // -----Implementation of AppRTCClient.AppRTCSignalingEvents ---------------
     // All callbacks are invoked from websocket signaling looper thread and
@@ -304,13 +267,10 @@ class CallActivity : AppCompatActivity(), AppRTCClient.SignalingEvents, PeerConn
 
         signalingParameters = params
         Log.v(LOG_TAG,"Creating peer connection, delay=" + delta + "ms")
-        var videoCapturer: VideoCapturer? = null
-        if (peerConnectionParameters!!.videoCallEnabled) {
-            videoCapturer = createVideoCapturer()
-        }
+
         peerConnectionClient!!.createPeerConnection(
-            rootEglBase!!.eglBaseContext, local_video_view,
-            remoteRenderer, videoCapturer, signalingParameters!!
+            rootEglBase.eglBaseContext, local_video_view,
+            remoteRenderer, createVideoCapturer(this,peerConnectionParameters!!.videoCallEnabled), signalingParameters!!
         )
 
         if (signalingParameters!!.initiator) {

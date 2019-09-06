@@ -5,8 +5,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.annotation.NonNull
 import androidx.appcompat.app.AppCompatActivity
-import com.aqil.webrtc.utils.Constants.EXTRA_ROOMID
-import com.aqil.webrtc.utils.Constants.IS_VIDEO
+import com.aqil.utils.Constants.EXTRA_ROOMID
+import com.aqil.utils.Constants.IS_VIDEO
 import kotlinx.android.synthetic.main.activity_main.*
 import pub.devrel.easypermissions.EasyPermissions
 

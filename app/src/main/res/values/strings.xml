@@ -1,10 +1,4 @@
 <resources>
     <string name="app_name">WebRtcAudioVideoCalling</string>
-    <string name="audio_call">AudioCall</string>
-    <string name="video_call">Video Call</string>
-    <string name="cut">Cut</string>
-    <string name="speaker">speaker</string>
-    <string name="mute">mute</string>
-    <string name="connecting_to">Connecting to: %1$s</string>
-    <string name="camera_switch">switch</string>
+
 </resources>
